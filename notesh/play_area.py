@@ -14,6 +14,7 @@ from textual.widget import Widget
 from notesh.drawables.box import Box
 from notesh.drawables.drawable import Drawable
 from notesh.drawables.sticknote import Note
+from notesh.utils import calculate_size_for_file, load_drawables
 
 CHUNK_SIZE = Offset(20, 5)
 
@@ -28,21 +29,29 @@ class PlayArea(Container):
     def __init__(
         self,
         *children: Widget,
+        file: str = "test",
         name: str | None = None,
         id: str | None = None,
         classes: str | None = None,
-        min_size: Size = Size(0, 0),
-        max_size: Size = Size(100, 40),
         screen_size: Size = Size(100, 100),
         color: str = "#444444",
         border_color: str = "#ffaa00",
     ) -> None:
         super().__init__(*children, name=name, id=id, classes=classes)
-        calculated_width, calculated_height = self._calculate_size(min_size, max_size)
+        self.min_size, self.max_size = calculate_size_for_file(file)
+        calculated_width, calculated_height = self._calculate_size(self.min_size, self.max_size)
+        self.file = file
         self.styles.width, self.styles.height = calculated_width, calculated_height
         self.offset += self._calculate_additional_offset(screen_size, Size(calculated_width, calculated_height))
         self.color = Color.parse(color)
         self.border_color = Color.parse(border_color)
+
+    def on_mount(self):
+        self.clear_drawables()
+        drawables, background = load_drawables(self.file)
+        for name, drawable_obj in drawables:
+            self.add_parsed_drawable(drawable_obj, name, Offset(self.min_size.width, self.min_size.height))
+        self.load(background)
 
     def compose(self) -> ComposeResult:
         self.change_color(self.color, duration=0.0)

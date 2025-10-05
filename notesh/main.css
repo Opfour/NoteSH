@@ -21,10 +21,8 @@ Footer {
 
 Note {
     layer: note_disactive;
-    background:; 
     border: none;
-    text-style:;
-    rule: ;
+    text-style: none;
     padding: 0 0 0 0;
     margin: 0;
     height: 14;
@@ -34,26 +32,51 @@ Note {
     opacity: 100%;
 }
 
-Note Static {
+Note TextArea {
     background: $secondary-darken-1;
     color: $text;
     border: none;
     width: 100%;
     height: 100%;
     overflow: hidden;
-    text-style:;
-    rule:;
+    text-style: none;
 
     border: none;
     border-right: outer $secondary-darken-3;
     border-left: outer $secondary-lighten-1;
     border-top: none;
-    border-bottom: outer $secondary-darken-3;
+    /* border-bottom: outer $secondary-darken-3; */
+
+    padding: 0;
+    margin: 0;
+
+    &.-textual-compact {
+    }
+    & .text-area--cursor {
+    }
+    & .text-area--gutter {
+    }
+
+    & .text-area--cursor-gutter {
+    }
+
+    & .text-area--cursor-line {
+       background: $boost;
+    }
+
+    & .text-area--selection {
+    }
+
+    & .text-area--matching-bracket {
+    }
 }
 
 #note-toper {
     dock: top;
     height: 4;
+
+    padding: 0;
+    margin: 0;
 }
 
 #note-top {
@@ -63,6 +86,9 @@ Note Static {
     border-left: outer $secondary-lighten-1;
     border-bottom: none;
     height: 3;
+
+    padding: 0;
+    margin: 0;
 }
 
 #note-spacer {
@@ -71,34 +97,93 @@ Note Static {
     border: none;
     height: 1;
     min-height: 1;
+
+    padding: 0;
+    margin: 0;
 }
 
+
+#note-resizer-bar {
+    dock: bottom;
+    width: 100%;
+    height: 1;
+    border: none;
+
+    padding: 0;
+    margin: 0;
+}
+
+
 #note-resizer-left {
+    dock: left;
+
     background: $secondary-darken-3;
     color: $secondary-lighten-1;
     border: none;
-    border-bottom: tall;
     height: 1;
     min-height: 1;
     width: 1fr;
-    content-align: left bottom;
+
+    padding: 0;
+    margin: 0;
 }
 
 #note-resizer {
+    dock: right;
     background: $secondary-darken-3;
     color: $secondary-lighten-1;
     border: none;
     height: 1;
     min-height: 1;
     width: 2;
-    content-align: right bottom;
+    min-width: 2;
+    max-width: 2;
+
+    padding: 0;
+    margin: 0;
 }
 
-#note-resizer-bar {
+#box-resizer {
     dock: bottom;
+    width: 100%;
     height: 1;
+    border: none;
+
+    padding: 0;
+    margin: 0;
 
 }
+
+Box Resizer{
+    dock: right;
+    border: none;
+    height: 1;
+    min-height: 1;
+    width: 2;
+    min-width: 2;
+    max-width: 2;
+
+    padding: 0;
+    margin: 0;
+
+}
+
+Box ResizerBoxLeft {
+    height: 2;
+    min-height: 2;
+    max-height: 2;
+    width: 100%;
+    min-width: 100%;
+    max-width: 100%;
+
+    padding: 0;
+    margin: -1 0;
+}
+
+Drawable Resizer:hover{
+    opacity: 80%;
+}
+
 
 Sidebar {    
     layer: sidebar;
@@ -125,27 +210,21 @@ Sidebar.-hidden {
     text-style: bold;
 }
 
-MultilineArray {
+/* Drawable TextArea { */
+/*     background: orange; */
+/*     border: outer blue; */
+/* } */
+
+Sidebar TextArea {
     background: $boost;
     color: $text;
     border: heavy $secondary-darken-3;
     height: auto;
     min-height: 1;
-}
-
-
-MultilineInput {
-    border: none;
-}
-
-Sidebar Button {
     width: 100%;
-    height: 3;
-    margin: 0 1;
 }
 
-
-Sidebar MultilineArray.-hidden {
+Sidebar TextArea.-hidden {
     min-height: 0;
     min-width: 0;
     height: 0;
@@ -153,6 +232,12 @@ Sidebar MultilineArray.-hidden {
     border: none;
     visibility: hidden;
     dock: bottom;
+}
+
+Sidebar Button {
+    width: 100%;
+    height: 3;
+    margin: 0 1;
 }
 
 Sidebar ColorPicker.-hidden {
@@ -190,7 +275,7 @@ Sidebar Button.-hidden {
 ColorPicker {
     align-horizontal: center;
     background: $panel;
-    /* background: $accent; */
+    width: 100%;
     height: auto;
     margin: 0 0 0 0;
 }
@@ -262,11 +347,10 @@ ColorPickerChanger Static {
 }
 
 ColorPickerChanger Button {
-    row-span: 1;
-    column-span: 1;
-    height: 1;
-    width: 3;
+    border: none;
     background: $accent;
+    padding: 0 0 0 0;
+    margin: 0 0 0 0;
 }
 
 ColorPickerChanger Button.-up {
@@ -309,24 +393,6 @@ Drawable #default-body {
     height: 100%;
     overflow-x: hidden;
     overflow-y: hidden;
-}
-
-Drawable Resizer{
-    opacity: 100%;
-    color: $error;
-    dock: bottom;
-    height: 1;
-    width: 2;
-    min-height: 1;
-    min-width: 1;
-    align-horizontal: right;
-    border: none;
-    overflow-x: hidden;
-    overflow-y: hidden;
-}
-
-Drawable Resizer:hover{
-    opacity: 80%;
 }
 
 SidebarLeft {    

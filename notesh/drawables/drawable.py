@@ -1,20 +1,20 @@
 from __future__ import annotations
 
-from typing import Any, Optional, OrderedDict, Type, TypeVar, cast
+from typing import Any, Literal, Optional, OrderedDict, Type, TypeVar, cast
 
+from rich.console import RenderableType
 from rich.markdown import Markdown
 from textual import events
 from textual.app import ComposeResult
 from textual.color import Color
-from textual.containers import Vertical
+from textual.containers import Vertical, Horizontal
 from textual.geometry import Offset, Size
 from textual.message import Message
 from textual.reactive import reactive
 from textual.widget import Widget
-from textual.widgets import Input, Static
+from textual.widgets import Input, Static, TextArea
 
 from notesh.utils import generate_short_uuid
-from notesh.widgets.multiline_input import MultilineArray
 
 _T = TypeVar("_T")
 
@@ -54,10 +54,7 @@ class Drawable(Static):
         self.resizer = Resizer(body=" ", id=f"{self.id}-resizer", parent=self)
 
     def drawable_body(self) -> ComposeResult:
-        yield Vertical(
-            self.body,
-        )
-        yield self.resizer
+        yield Vertical(self.body, self.resizer)
 
     def compose(self) -> ComposeResult:
         yield from self.drawable_body()
@@ -159,8 +156,7 @@ class Drawable(Static):
         else:
             self.update_layout(duration=0.1)
 
-    def next_border(self):
-        ...
+    def next_border(self): ...
 
     def bring_forward(self):
         layers = tuple(x for x in self.screen.styles.layers if x not in [self.layer, f"{self.layer}-resizer"])
@@ -170,11 +166,9 @@ class Drawable(Static):
         layers = tuple(x for x in self.screen.styles.layers if x not in [self.layer, f"{self.layer}-resizer"])
         self.screen.styles.layers = (f"{self.styles.layer}", f"{self.styles.layer}-resizer") + layers
 
-    def input_changed(self, event: Input.Changed):
-        ...
+    def input_changed(self, event: Input.Changed): ...
 
-    def multiline_array_changed(self, event: MultilineArray.Changed):
-        ...
+    def multiline_array_changed(self, event: TextArea.Changed): ...
 
     def sidebar_layout(self, widgets: OrderedDict[str, Widget]) -> None:
         widgets["body_color_picker"].remove_class("-hidden")
@@ -184,7 +178,7 @@ class Drawable(Static):
 
     def dump(self) -> dict[str, Any]:
         return {
-            "body": self.body.body,
+            "body": self.body.text,
             "pos": (self.styles.offset.x.value, self.styles.offset.y.value),
             "color": self.color.hex6,
             "size": (self.styles.width.value, self.styles.height.value),
@@ -233,7 +227,7 @@ class Drawable(Static):
             self.drawable = drawable
 
 
-class DrawablePart(Static):
+class DrawablePartStatic(Static):
     body: reactive[str] = reactive("")
 
     def __init__(
@@ -250,7 +244,7 @@ class DrawablePart(Static):
         self.body = str(body)
 
     def watch_body(self, body_text: str):
-        self.update(Markdown(body_text))
+        self.text = body_text
 
     async def on_mouse_down(self, event: events.MouseDown):
         self.capture_mouse()
@@ -260,8 +254,7 @@ class DrawablePart(Static):
         self.capture_mouse(False)
         await self.pparent.drawable_is_unfocused(event)
 
-    async def on_mouse_move(self, event: events.MouseMove) -> None:
-        ...
+    async def on_mouse_move(self, event: events.MouseMove) -> None: ...
 
     async def on_enter(self, event: events.Enter):
         await self.pparent.on_enter(event)
@@ -270,13 +263,112 @@ class DrawablePart(Static):
         await self.pparent.on_leave(event)
 
 
+class DrawablePart(TextArea):
+    body: reactive[str] = reactive("")
+
+    def __init__(
+        self,
+        parent: Drawable,
+        name: str | None = None,
+        id: str | None = None,
+        classes: str | None = None,
+        body: str = "",
+    ) -> None:
+        language: str | None = None
+        soft_wrap: bool = True
+        tab_behavior: Literal["focus", "indent"] = "indent"
+        read_only: bool = False
+        show_line_numbers: bool = False
+        line_number_start: int = 1
+        max_checkpoints: int = 50
+        disabled: bool = False
+        tooltip: RenderableType | None = None
+        compact: bool = True
+        highlight_cursor_line: bool = True
+
+        super().__init__(
+            body,
+            name=name,
+            id=id,
+            classes=classes,
+            show_cursor=False,
+            # Taken
+            language=language,
+            soft_wrap=soft_wrap,
+            tab_behavior=tab_behavior,
+            read_only=read_only,
+            show_line_numbers=show_line_numbers,
+            line_number_start=line_number_start,
+            max_checkpoints=max_checkpoints,
+            disabled=disabled,
+            tooltip=tooltip,
+            compact=compact,
+            highlight_cursor_line=highlight_cursor_line,
+        )
+
+        self.clicked = Offset(0, 0)
+        self.pparent: Drawable = parent
+        self.body = str(body)
+
+    def watch_body(self, body_text: str):
+        self.text = body_text
+
+    async def on_mouse_down(self, event: events.MouseDown):
+        self.capture_mouse()
+        await self.pparent.drawable_is_focused(event)
+
+    async def on_mouse_up(self, event: events.MouseUp):
+        self.capture_mouse(False)
+        await self.pparent.drawable_is_unfocused(event)
+
+    async def on_mouse_move(self, event: events.MouseMove) -> None: ...
+
+    async def on_enter(self, event: events.Enter):
+        await self.pparent.on_enter(event)
+        # self.read_only = False
+
+    async def on_leave(self, event: events.Leave):
+        await self.pparent.on_leave(event)
+        self.show_cursor = False
+
+    async def on_text_area_changed(self, event: TextArea.Changed):
+        self.pparent.multiline_array_changed(event)
+
+    def _on_mouse_scroll_down(self, event: events.MouseScrollDown) -> None:
+        """Finalize the selection that has been made using the mouse."""
+        if not self._has_cursor:
+            self.scroll_up()
+            return
+        target = self.get_cursor_up_location()
+        self.move_cursor(target, record_width=False)
+
+    def _on_mouse_scroll_up(self, event: events.MouseScrollUp) -> None:
+        """Finalize the selection that has been made using the mouse."""
+        if not self._has_cursor:
+            self.scroll_down()
+            return
+        target = self.get_cursor_down_location()
+        self.move_cursor(target, record_width=False)
+
+    def _watch_has_focus(self, focus: bool) -> None:
+        self._cursor_visible = focus
+        if focus:
+            self._restart_blink()
+            self.app.cursor_position = self.cursor_screen_offset
+            self.history.checkpoint()
+        else:
+            self._pause_blink(visible=False)
+            self.show_line_numbers = False
+            self.move_cursor((0,0))
+
+
 class Body(DrawablePart):
     async def on_mouse_move(self, event: events.MouseMove) -> None:
         ...
         await self.pparent.drawable_is_moved(event)
 
 
-class Resizer(DrawablePart):
+class Resizer(DrawablePartStatic):
     def __init__(
         self,
         parent: Drawable,

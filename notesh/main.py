@@ -9,10 +9,11 @@ from textual.binding import Binding
 from textual.geometry import Offset, Size
 from textual.keys import KEY_ALIASES
 from textual.widget import Widget
+from textual._context import active_app
 
 from notesh.drawables.drawable import Drawable
 from notesh.play_area import PlayArea
-from notesh.utils import calculate_size_for_file, load_binding_config_file, load_drawables, save_drawables, set_bindings
+from notesh.utils import load_binding_config_file, load_drawables, save_drawables, set_bindings
 from notesh.widgets.focusable_footer import FocusableFooter
 from notesh.widgets.sidebar import DeleteDrawable, Sidebar
 from notesh.widgets.sidebar_left import SidebarLeft
@@ -66,15 +67,14 @@ class NoteApp(App[None]):
         file: str = DEFAULT_FILE,
     ):
         super().__init__(watch_css=watch_css)
+        active_app.set(self)
         self.file = file
         self.footer = FocusableFooter()
         self.sidebar_left = SidebarLeft(classes="-hidden")
         self.sidebar = Sidebar(classes="-hidden")
 
     def compose(self) -> ComposeResult:
-        min_size, max_size = calculate_size_for_file(self.file)
-        self.play_area = PlayArea(min_size=min_size, max_size=max_size, screen_size=self.size)
-        self.action_load_notes(min_size)
+        self.play_area = PlayArea(file=self.file, screen_size=self.size)
         self.sidebar_left.set_play_area(self.play_area)
 
         self._load_key_bindings()

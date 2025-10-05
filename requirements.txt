@@ -1,3 +1,3 @@
-textual
-tomli
-hoptex
+textual==5.0.1
+tomli==2.0.1
+hoptex==0.2.0

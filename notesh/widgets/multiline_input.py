@@ -83,7 +83,7 @@ class MultilineArray(Vertical):
 
         for line in value.split("  \n"):
             self.lines.append(MultilineInput(line, id=f"sidebar-input-{len(self.lines)}"))
-            self.mount(self.lines[-1])
+            # self.mount(self.lines[-1])
 
     async def on_input_changed(self, event: MultilineInput.Changed):
         event.stop()

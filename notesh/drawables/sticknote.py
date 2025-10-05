@@ -9,10 +9,10 @@ from textual.containers import Horizontal, Vertical
 from textual.geometry import Offset, Size
 from textual.widget import Widget
 from textual.widgets import Input
+from textual.widgets import TextArea
 
-from notesh.drawables.drawable import Drawable, DrawablePart, Resizer
+from notesh.drawables.drawable import Drawable, DrawablePart, DrawablePartStatic, Resizer
 from notesh.utils import generate_short_uuid
-from notesh.widgets.multiline_input import MultilineArray
 
 
 def build_color(any_color: str | Color) -> tuple[Color, Color, Color, Color]:
@@ -87,10 +87,16 @@ class Note(Drawable):
         self.spacer.styles.background = much_darker
         self.spacer.styles.color = lighter
 
+        # Hack to update color of the text area 
+        self.title.styles.background = default
+
         self.title.styles.animate("background", value=default, duration=duration)
         self.title.styles.border_top = ("outer", lighter)
         self.title.styles.border_left = ("outer", lighter)
         self.title.styles.border_right = ("outer", much_darker)
+
+        # Hack to update color of the text area 
+        self.body.styles.background = darker
 
         self.body.styles.animate("background", value=darker, duration=duration)
         self.body.styles.border_right = ("outer", much_darker)
@@ -103,27 +109,25 @@ class Note(Drawable):
         self.resizer.styles.background = much_darker
         self.resizer.styles.color = default
 
+        # Hack to update color of the text area 
+        self.body.notify_style_update()
+        self.title.notify_style_update()
+
+
     def sidebar_layout(self, widgets: OrderedDict[str, Widget]) -> None:
-        widgets["input"].remove_class("-hidden")
-        widgets["multiline_array"].remove_class("-hidden")
+        # widgets["input"].remove_class("-hidden")
+        # widgets["multiline_input"].remove_class("-hidden")
         widgets["body_color_picker"].remove_class("-hidden")
         widgets["delete_button"].remove_class("-hidden")
 
-        widgets["input"].value = str(self.title.body)
-        widgets["multiline_array"].recreate_multiline(str(self.body.body))
+        # widgets["input"].value = str(self.title.body)
+        # widgets["multiline_input"].text = str(self.body.body)  # TODO: recreate here
         widgets["body_color_picker"].update_colors(self.color)
-
-    def input_changed(self, event: Input.Changed):
-        self.title.body = str(event.value)
-
-    def multiline_array_changed(self, event: MultilineArray.Changed):
-        text = [str(x.value) for x in event.input.lines]
-        self.body.body = "  \n".join(text)
 
     def dump(self) -> dict[str, Any]:
         return {
-            "title": self.title.body,
-            "body": self.body.body,
+            "title": self.title.text,
+            "body": self.body.text,
             "pos": (self.styles.offset.x.value, self.styles.offset.y.value),
             "color": self.color.hex6,
             "size": (self.styles.width.value, self.styles.height.value),
@@ -152,11 +156,11 @@ class NoteTop(DrawablePart):
         await self.pparent.drawable_is_moved(event)
 
 
-class Spacer(DrawablePart):
+class Spacer(DrawablePartStatic):
     async def on_mouse_move(self, event: events.MouseMove) -> None:
         await self.pparent.drawable_is_moved(event)
 
 
-class ResizerLeft(DrawablePart):
+class ResizerLeft(DrawablePartStatic):
     async def on_mouse_move(self, event: events.MouseMove) -> None:
         await self.pparent.drawable_is_moved(event)

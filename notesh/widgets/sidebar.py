@@ -7,12 +7,11 @@ from textual.color import Color
 from textual.containers import Vertical
 from textual.message import Message
 from textual.widget import Widget
-from textual.widgets import Button, Input
+from textual.widgets import Button, Input, Static, TextArea
 
 from notesh.drawables.drawable import Drawable
 from notesh.play_area import PlayArea
 from notesh.widgets.color_picker import ColorPicker
-from notesh.widgets.multiline_input import MultilineArray
 
 
 class DeleteDrawable(Message):
@@ -34,8 +33,8 @@ class Sidebar(Vertical):
         super().__init__(*children, name=name, id=id, classes=classes)
         self.drawable: Optional[Drawable] = None
 
-        input = Input("Title", id="sidebar-title")
-        multiline_array = MultilineArray()
+        # input = Static("Title", id="sidebar-title")
+        # multiline_input = TextArea.code_editor()
 
         body_color_picker = ColorPicker(type="body", title="Body Color Picker")
 
@@ -46,8 +45,8 @@ class Sidebar(Vertical):
 
         self.widget_list: OrderedDict[str, Widget] = OrderedDict(
             {
-                "input": input,
-                "multiline_array": multiline_array,
+                # "input": input,
+                # "multiline_input": multiline_input,
                 "body_color_picker": body_color_picker,
                 "border_color_picker": border_color_picker,
                 "border_picker": border_type,
@@ -76,13 +75,13 @@ class Sidebar(Vertical):
             self.set_focus(True)
         self.refresh()
 
-    async def on_input_changed(self, event: Input.Changed):
-        if self.drawable is not None:
-            self.drawable.input_changed(event)
+    # async def on_input_changed(self, event: Input.Changed):
+    #     if self.drawable is not None:
+    #         self.drawable.input_changed(event)
 
-    async def on_multiline_array_changed(self, event: MultilineArray.Changed):
-        if self.drawable is not None:
-            self.drawable.multiline_array_changed(event)
+    # async def on_text_area_changed(self, event: TextArea.Changed):
+    #     if self.drawable is not None:
+    #         self.drawable.multiline_array_changed(event)
 
     def change_drawable_color(self, color: Color | str, part_type: str):
         if self.drawable:
@@ -110,10 +109,7 @@ class Sidebar(Vertical):
                 if child.has_class("-hidden"):
                     continue
                 # Should be change to something pretier
-                if isinstance(child, MultilineArray):
-                    return child.lines[0]
-                else:
-                    return child
+                return child
             return None
         child: Widget = list(self.widget_list.values())[index % len(self.widget_list)]
         if child.has_class("-hidden"):
